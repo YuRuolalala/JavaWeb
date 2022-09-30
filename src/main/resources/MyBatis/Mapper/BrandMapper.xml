@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MyBatis.Mapper.BrandMapper">
+
+
+    <!--
+    数据库表的字段名称 和 书体类属性名称不一样，则不能自动封装数据
+        解决方法
+           ·起别名：对不一样的列起别名，让别名和实体类属性名一样
+            缺点：每次查询都要定义一次别名
+                使用sql片段
+                    缺点：不灵活
+           ·resultMap：
+                1·定义resultMap标签
+                2·使用resultMap属性替换resultType属性
+    -->
+    <resultMap id="brandResultMap" type="MyBatis.pojo.Brand">
+        <result column="brand_name" property="brandName"/>
+        <result column="company_name" property="companyName"/>
+    </resultMap>
+
+    <sql id="brand_column">
+        id,brand_name brandName,company_name companyName,ordered,description,status
+    </sql>
+
+    <insert id="add" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_brand(brand_name,company_name,ordered,description,status)
+        values(#{brandName},#{companyName},#{ordered},#{description},#{status})
+    </insert>
+    <update id="update">
+        update tb_brand
+        <set>
+            <if test="brandName!=null and brandName!=''">
+                brand_name = #{brandName},
+            </if>
+            <if test="companyName!=null and companyName!=''">
+                company_name = #{companyName},
+            </if>
+            <if test="ordered!=null">
+                ordered = #{ordered},
+            </if>
+            <if test="description!=null and description!=''">
+                description = #{description},
+            </if>
+            <if test="status!=null">
+                status = #{status}
+            </if>
+
+        </set>
+        where id=#{id}
+    </update>
+
+    <delete id="deleteById">
+        delete from tb_brand where id=#{id};
+    </delete>
+    <delete id="deleteByIds">
+        delete from tb_brand
+        where  id
+        in
+
+            <foreach collection="ids" item="id" separator="," open="(" close=")">
+                #{id}
+            </foreach>
+
+    </delete>
+
+    <select id="selectAll" resultMap="brandResultMap">
+        select *
+        from tb_brand;
+    </select>
+
+    <!--
+    参数占位符：
+    1·#{}:会将其替换为？：为了防止SQL注入
+    2·${}:拼接sql，会存在sql注入问题
+    3·使用时机，参数传递的时候都用#{}
+
+    *特殊字符处理：
+        1·转义 &lt(<)
+        2·CDATA区 <![CDATA[ <  ]]>(<)
+    -->
+    <select id="selectById" resultType="MyBatis.pojo.Brand">
+        select <include refid="brand_column"/>
+        from tb_brand
+        where id  =  #{id}
+    </select>
+
+    <!--
+        条件查询
+    -->
+<!--    <select id="selectByCondition" resultType="MyBatis.pojo.Brand">-->
+<!--        select <include refid="brand_column"/>-->
+<!--        from tb_brand-->
+<!--        where-->
+<!--            status=#{status}-->
+<!--        and company_name like concat("%",#{companyName},"%")-->
+<!--        and brand_name like concat("%",#{companyName},"%")-->
+<!--    </select>-->
+
+
+    <!--动态SQL-->
+    <select id="selectByCondition" resultType="MyBatis.pojo.Brand">
+        select <include refid="brand_column"/>
+        from tb_brand
+--         where 1=1
+        <where>
+            <if test="status!=null">
+                and status=#{status}
+            </if>
+            <if test="companyName!=null and companyName!=''">
+                and company_name like concat("%",#{companyName},"%")
+            </if>
+            <if test="brandName!=null and brandName!=''">
+                and brand_name like concat("%",#{companyName},"%")
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

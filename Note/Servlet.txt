@@ -1,0 +1,74 @@
+Servlet 快速入门
+1·创建web项目，导入Servlet依赖坐标
+        <dependency>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+          <version>3.1.0</version>
+          <scope>provided</scope>
+        </dependency>
+
+2·创建：定义一个类，实现Servlet接口，并重写接口中所有方法，并在service方法中输入一句话
+        @Override
+        public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
+            System.out.println("servlet hello world~");
+        }
+
+3·配置：在类上使用@WebServlet注解，配置该Servlet的访问路径
+        @WebServlet("/demo01")
+        public class ServletDemo01 implements Servlet {
+            ······
+        }
+
+4·访问：启动Tomcat，浏览器输入URL访问该Servlet
+        http://localhost:8080/Tomcat_Demo01_war/demo01
+
+Servlet执行流程
+
+    1·Servlet由谁创建？Servlet方法由谁调用？
+        web服务器创建，web服务器调用。
+    2·服务器怎么知道Servlet中一定由service方法
+        因为我们自定义的Servlet必须实现Servlet接口并复写其方法
+        而Servlet接口中由service方法
+
+Servlet生命周期
+    ·对象的生命周期指一个对象从呗创建到被销毁的整个过程
+    ·Servlet运行在Servlet容器(web服务器)中，其生命周期由容器来管理，分为四个阶段
+    1·加载和实例化：默认情况下，当Servlet第一次被访问时，由容器创建Servlet对象
+            @WebServlet(urlPatterns="/XXXX",loadOnStartup=1)
+                    若是负整数，第一次访问时创建Servlet对象
+                    若是0或正整数，服务器启动时创建Servlet对象，数字越小优先级越高
+    2·初始化：在Servlet实例化后，容器将调用Servlet的init()方法初始化这个对象
+            完成一些如加载配置文件、创建连接等初始化的工作。该方法只调用一次
+    3·请求处理：每次请求Servlet时，Servlet容器都会调用Servlet的service()方法对请求进行处理
+    4·服务终止:当需要释放内存 或关闭容器时，容器就会调用Servlet实例的destroy()方法完成资源的释放。
+            在destroy()方法调用之后，容器会释放这个Servlet实例，该实例随后会被Java的垃圾收集器所回收。
+
+·Servlet方法介绍
+    ·初始化方法，在Servlet被创建时执行，只执行一次
+    ·提供服务方法，每次Servlet被访问，都会调用该方法
+    ·销毁方法，当Servlet被销毁时，调用该方法。在内存释放或服务器关闭时销毁Servlet
+    ·获取ServletConfig对象
+    ·获取Servlet信息
+
+·Servlet体系结构
+    ·Servlet              Servlet体系根接口
+    ·GenericServlet       Servlet抽象实现类
+    ·HttpServlet          对HTTP协议封装的Servlet实现类
+    我们将来开发B/S架构web项目，都是针对HTTP协议，所以我们自定义Servlet，
+    会继承HttpServlet
+
+    HttpServlet中为什么要根据请求方式的不同，调用不同的方法呢？
+        请求方式不同，请求消息就不同，要分别去处理。
+    如何调用？
+        获取请求方式，做不同的逻辑判断
+
+·Servlet urlPattern配置
+    ·Servlet要想被访问，必须配置其访问路径(urlPattern)
+    1·一个Servlet,可以配置多个 urlPattern
+      @WebServlet(urlPatterns={"/demo01","/demo02"})
+    2·urlPattern 配置规则
+        ①精准匹配
+        ②目录匹配
+        ③扩展名匹配
+        ④任意匹配
+

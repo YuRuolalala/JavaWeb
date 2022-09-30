@@ -1,0 +1,130 @@
+·Request Response
+    Request：获取请求数据
+    Response：设置相应数据
+
+·Request
+    ·Request继承体系
+        ·ServletRequest             Java提供的请求对象根接口
+        ·HttpServletRequest         Java提供的对Http协议封装的请求对象接口
+        ·RequestFacade              Tomcat定义的实现类
+
+        1·Tomcat需要解析请求数据，封装为request对象，并且创建request对象传递到service方法中
+        2·使用request对象，查阅JavaEE API文档的HttpServletRequest接口
+
+    ·Request获取请求数据
+        ·请求数据分为三部分
+
+            ·请求行
+             http://localhost:8080/Tomcat_Demo01_war/demo07?username=zhangsan&password=123456
+                String getMethod()                //:Get
+                String getContextPath()           //:/Tomcat_Demo01_war
+                StringBuffer getRequestURL()      //:http://localhost:8080/Tomcat_Demo01_war/demo07
+                String getRequestURI()            //:/Tomcat_Demo01_war/demo07
+                String getQueryString()           //:username=zhangsan&password=123456
+            ·请求头
+                ·String getHeader(String name):根据请求头名称，获取值
+            ·请求体
+                ·ServletInputStream getInputStream():获取字节输入流
+                ·BufferedReader getReader():获取字符输入流
+
+        ·Map<String,String[]> getParameterMap()：获取所有参数Map集合
+        ·String[] getParameterValues(String name):根据名称获取参数值(数组)
+        ·String getParameter(String name)：根据名称获取参数值(单个值)
+
+        Request请求参数中文乱码处理
+        ·请求参数如果存在中文数据，则会乱码
+        ·解决方案：
+            post：设置输入流的编码
+            req.setCharacterEncoding("UTF-8");
+            get：
+                //获取username
+                String username=req.getParameter("username");
+                //乱码原因：tomcat进行URL解码，默认的字符集为ISO-8859-1
+                //先对乱码数据进行编码，转化为字节数组
+                byte[] bytes = username.getBytes(StandardCCharsets.ISO_8859_1);
+                //字节组解码
+                username=new String(bytes,StandardCharsets.UTF_8);
+            通用方法：
+                String username=req.getParameter("username");
+                username=new String(username.getBytes(StandardCCharsets.ISO_8859_1),StandardCharsets.UTF_8);
+
+    Request请求转发
+        ·一种在服务器内部的资源跳转方式
+        实现方式：req.getRequestDispatcher("资源B路径").forward(res,resp);
+        ·请求转发资源共享数据：使用Request对象
+            ·void setAttribute(String name,Object o):存储数据到request域中
+            ·Object getAttribute(String name):根据key,获取值
+            ·void removeAttribute(String name):根据key，删除该键值对
+        请求转发特点：
+            ·浏览器地址栏不发生变化
+            ·只能转发到当前服务器的内部资源
+            ·一次请求，可以在转发的资源见使用request共享数据
+
+·Response
+    ·Response 设置响应数据功能介绍
+        ·响应数据分为三部分：
+            1·响应行
+                ·void setStatus(int sc)：设置响应码
+            2·响应头
+                ·void setHeader(String name,String value)：设置响应头键值对
+            3·响应体
+                ·PrintWriter getWriter(): 获取字符输出流
+                ·ServletOutputStream getOutputStream(): 获取字节输出流
+    ·Response 完成重定向
+        ·重定向：一种资源跳转方式
+            实现方式：
+                1·浏览器向资源A发出请求
+                2·资源A响应：
+                    ①自己处理不了，找别的资源B处理，状态码302
+                        resp.setStatus(302);
+                    ②资源B的位置是xxx：响应头  location：xxx
+                        resp.setHeader("location","资源B的路径");
+                3·浏览器根据资源A的响应去找资源B
+                ·简单写法:
+                    resp.sendRedirect("资源B的路径");
+            重定向特点：
+                ·浏览器地址栏路径发生变化
+                ·可以重定向到任意资源的位置(服务器内部、外部均可)
+                ·两次请求，不能在多个资源使用request共享数据
+    ·Response 相应字符数据
+        ·使用：
+            0·设置响应格式和字符集
+                resp.setContentType("text/html";"charset=utf-8");
+            1·通过Response对象获取字符输出流
+                PrintWriter writer=resp.getWriter();
+            2·写数据
+                writer.writer("aaa");
+                这个流不需要关闭
+    ·Response 相应字节数据
+        ·使用：
+            1·通过Response对象获取字符输出流
+                ServletOutputStream outputStream=resp.getoutPutStream();
+            2·写数据
+                outputStream.write(字节数据);
+        ·IOUtils工具类使用
+            1·导入坐标
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.6</version>
+            <dependency>
+            2·使用
+            IOUtils.copy(输入流,输出流)
+    路径问题：
+        ·明确路径谁使用？
+            ·浏览器使用：需要添加虚拟目录
+            ·服务端使用：不需要加虚拟目录
+        ·动态获取虚拟目录
+            String contextPath=req.getContextPath();
+
+Servlet&Request&Response 登录案例
+    ·流程说明
+    1·用户填写用户名密码，提交到LoginServlet
+    2·在LoginServlet中使用MyBatis查询数据库，验证用户名密码是否正确
+    3·如果正确，响应"登录成功",如果错误，响应"登陆失败"
+
+Servlet&Request&Response 注册案例
+    ·流程说明：
+    1·用户填写用户名、密码等信息，点击注册按钮，提交到RegisterServlet
+    2·在RegisterServlet中使用MyBatis保存数据
+    3·保存前，需要判断用户名是否已经存在：根据用户名查询数据库

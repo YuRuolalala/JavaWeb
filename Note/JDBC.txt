@@ -1,0 +1,108 @@
+JDBC简介
+·JDBC概念：
+    ·JDBC就是使用java语言操作关系型数据库的一套API
+    ·全程(Java DataBase Connectivity) Java数据库连接
+·JDBC本质：
+    ·官方定义的一套操作所有所有关系型数据库的规则，即接口
+    ·各个数据库厂商去实现这套接口，提供数据库驱动jar包
+    ·我们可以使用这套接口编程，真正执行代的代码时驱动jar包中的实现类
+·JDBC好处：
+    ·各个数据库厂商使用相同的接口，Java代码不需要针对不同数据库分别开发
+    ·可随时替换底层数据库，访问数据库的Java代码基本不变
+
+·JDBC快速入门：
+    0·创建工程，导入驱动jar包
+    1·注册驱动
+        Class.forName("com.mysql.jdbc.Driver");
+    2·获取连接
+        Connection connection = DriverManager.getConnection(url, username, password);
+
+    3·定义SQL语句
+        String sql = "update account set moeny = 2000 where id =1";
+    4·获取执行sql对象
+        Statement statement = connection.createStatement();
+    5·执行sql
+        int count=statement.executeUpdate(sql);
+    6·处理返回结果
+        System.out.println(count);
+    7·释放资源
+        statement.close();
+        connection.close();
+
+·JDBC API 详解
+    DriverManager(驱动管理类)作用：
+    1·注册驱动
+
+    2·获取数据库连接
+
+
+    Connection(数据库连接对象)作用：
+    1·获取执行SQL的对象
+        ·普通执行sql对象
+        Statement createStatement()
+        ·预编译sql的执行sql：防止sql注入
+        PreparedStatement prepareStatement(sql)
+        ·执行存储过程的对象
+        CallableStatement prepareCall(sql)
+    2·管理事务
+        ·开启事务
+            setAutoCommit(boolean cutoCommit)：true
+        ·提交事务
+            commit()
+        ·回滚事务
+            rollback()
+
+    Statement
+    1·执行SQL语句
+        返回值，DML语句影响行数，根据是否大于零判断是否执行成功
+        返回值，DDL语句执行后，执行成功可能也返回0
+
+    ResultSet
+    1·封装了DQL查询语句的结果
+        ResultSet stmt.executeQuery(sql):执行sql语句，返回ResultSet对象
+    2·获取查询结果
+        boolean next():
+            1·将光标从当前行向前移动一行
+            2·判断当前行为是否有效
+            返回值：true，有效行，当前行有数据
+                   false，无效行，当前行没有数据
+
+    PreparedStatement
+    ·PreparedStatement作用：
+        1·预编译SQL语句并执行：预防SQL注入问题
+            SQL注入，字符串拼接出一个 or 1=1之类的
+        2·使用方式
+            ①获取PreparedStatement对象
+                String sql="select * from users where username=? and password=?";
+                PreparedStatement pstmt=conn.prepareStatement(sql);
+            ②设置参数值
+                preparedStatement.setXXX(1,name);
+                preparedStatement.setXXX(2,pwd);
+            ③要用参数开启预编译功能
+                useServerPrepStmts=true
+数据库连接池简介
+    ·数据库连接池是一个容器，负责分配、管理数据库连接
+    ·它允许应用程序重复使用一个现有的数据库连接，而不是再重新建立一个；
+    ·释放空闲时间超过最大空闲时间的数据库连接来避免因为没有释放数据库连接而引起的数据库连接遗漏
+    ·好处：
+        ·资源重用
+        ·提升系统响应速度
+        ·避免数据库连接遗漏
+    ·标准接口：DataSource
+        ·官方提供的数据库连接池标准接口，由第三方组直实现此接口
+        ·功能：获取连接
+            Connection getConnection()
+        ·常见的数据库连接池：
+            ·DBCP
+            ·C3P0
+            ·Druid
+        ·Druid(德鲁伊)
+            ·阿里巴巴开源的数据库连接池项目
+            ·功能强大，性能优秀，java最好的数据库连接池之一
+
+Driud使用步骤
+    1·导入jar包 druid-1.1.12.jar
+    2·定义配置文件
+    3·加载配置文件
+    4·获取数据库连接池对象
+    5·获取连接

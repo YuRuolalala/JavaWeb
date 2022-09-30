@@ -1,0 +1,131 @@
+MyBatis
+·什么是MyBatis?
+    ·MyBatis是一款优秀的持久层框架，用于简化JDBC开发
+    ·MyBatis本是Apache的一个开源项目iBatis，2010年这个项目由apache software
+    foundation迁移到了google code，并且改名为MyBatis。2013年11月迁移到Github
+
+·持久层
+    ·负责将数据库保存到数据库的那一层代码
+    ·JavaEE三层架构：表现层、业务层、持久层
+·框架
+    ·框架就是一个半成品软件，是一套可重用的、通用的、软件基础代码模型
+    ·在框架的基础之上构建软件编写更加高效、规范、通用、可扩展
+·JDBC缺点
+    1·硬编码
+        ·注册驱动，获取连接
+        ·SQL语句
+    2·操作繁琐
+        ·手动设置参数
+        ·手动封装结果集
+·MyBatis简化
+    硬编码=>配置文件
+    操作繁琐=>自动配置
+    MyBatis几乎免除了所有的JDBC代码以及设置参数和获取结果集的工作
+
+·MyBatis快速入门
+    查询user表中所有数据
+    编写MyBatis核心配置文件-->替换连接信息，解决硬编码问题
+    编写SQL映射文件-->统一管理sql语句，解决硬编码问题
+    编码：
+        定义pojo类
+        加载核心配置文件，获取SqlSessionFactory对象
+        获取SqlSession对象，执行SQL语句
+        释放资源
+
+·Mapper代理开发
+    ·目的：
+        ·解决原生方式中的硬编码
+        ·解决后期执行SQL
+    ·步骤：
+        1·定义与SQL映射文件同名的Mapper接口，并且将Mapper接口和SQL映射文件放置在同一目录下
+        2·设置SQL映射文件中的namespace属性为Mapper接口全限定名
+        3·在Mapper接口中定义方法，方法就是SQL映射文件中sql语句的id，并保持参数类型和返回值类型一致
+        4·编码
+            1·通过SqlSession的getMapper方法获取Mapper接口的代理对象
+            2·调用对应方法完成sql的执行
+
+·MyBatis核心配置文件
+    <!--
+    environments：配置数据库连接环境信息，可以配置多个environment
+    通过default属性切换不同的environment
+    -->
+
+·Mapper.xml的使用
+    <!--
+    数据库表的字段名称 和 书体类属性名称不一样，则不能自动封装数据
+        解决方法
+           ·起别名：对不一样的列起别名，让别名和实体类属性名一样
+            缺点：每次查询都要定义一次别名
+                使用sql片段
+                    缺点：不灵活
+            ·resultMap：
+                1·定义resultMap标签
+                2·使用resultMap属性替换resultType属性
+               id：完成主键字段的映射
+                column：表的列名
+                property：实体类的属性名
+               result：完成一般字段的映射
+                column：表的列名
+                property：实体类的属性名
+    -->
+    <!--
+        参数占位符：
+        1·#{}:会将其替换为？：为了防止SQL注入
+        2·${}:拼接sql，会存在sql注入问题
+        3·使用时机，参数传递的时候都用#{}
+
+        *特殊字符处理：
+            1·转义 &lt(<)
+            2·CDATA区 <![CDATA[ <  ]]>(<)
+    -->
+    SQL语句设置多个参数有几种方式
+    1·散装参数：需要使用@Parm("SQL中的参数占位符名称")
+    2·实体类封装参数：需要保证SQL中的参数名和实体类名对应上
+    3·需要保证SQL中的参数名和map集合中的键的名称对应上
+
+    动态SQL
+    ·SQL语句会随着用户的输入或外部条件的变化而变化，我们成为动态SQL
+    ·if
+    ·choose(when,otherwise)
+    ·trim(where,set)
+    ·foreach
+
+    基础添加
+        ·编写接口方法：Mapper接口
+            ·参数：除了id之外的所有数据
+            ·结果void
+        ·编写SQL语句：SQL映射文件
+        ·执行方法，测试
+            MyBatis事务：
+            openSession():默认开启事务，进行增删改查后需要sqlSession.commin();手动提交事务
+            openSession(true):可以设置自动提交事务(关闭事务)
+        ·主键返回
+            在数据添加成功后，需要获取插入数据库的主键的值
+            比如：添加订单和订单项
+                1·添加订单
+                2·添加订单项，订单项中需需要设置所属订单的id
+
+    修改
+    修改基础
+        1·编写接口方法：Mapper接口
+            参数：所有数据
+            结果：void
+        2·编写SQL语句：SQL映射文件
+        3·执行方法，测试
+    修改动态字段
+        动态SQL修改
+        <set></set>
+
+MyBatis参数传递
+    ·MyBatis接口方法中可以接收各种各样的参数，MyBatis底层对于这些参数进行不同的封装处理方式
+    ·单个参数：
+        1·POJO类型：直接使用，属性名和参数占位符名称一致
+        2·Map集合：直接使用，键名和参数占位符一致
+        3·Collection：封装成Map结合
+            map.put("arg0",collection集合)
+            map.put("collection",collection集合)
+        4·List：
+        5·Array：
+        6·其他类型：
+    ·多个参数：封装为Map集合
+    ·但是开发者在使用的时候，尽量都不要用默认的，都要用@Param注解
